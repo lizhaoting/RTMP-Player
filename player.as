@@ -39,23 +39,17 @@ package
         // play param, user set width and height
         private var user_w:int = 0;
         private var user_h:int = 0;
-        // user set dar den:num
         private var user_dar_den:int = 0;
         private var user_dar_num:int = 0;
-        // user set fs(fullscreen) refer and percent.
         private var user_fs_refer:String = null;
         private var user_fs_percent:int = 0;
         
-        // media specified.
         private var media_conn:NetConnection = null;
         private var media_stream:NetStream = null;
         private var media_video:Video = null;
         private var media_metadata:Object = {};
         private var media_timer:Timer = new Timer(300);
         
-        // controls.
-        // flash donot allow js to set to fullscreen,
-        // only allow user click to enter fullscreen.
         private var control_fs_mask:Sprite = new Sprite();
         
         public function srs_player()
@@ -66,10 +60,6 @@ package
                 this.system_on_add_to_stage(null);
             }
         }
-        /**
-        * system event callback, when this control added to stage.
-        * the main function.
-        */
         private function system_on_add_to_stage(evt:Event):void {
             this.removeEventListener(Event.ADDED_TO_STAGE, this.system_on_add_to_stage);
             this.stage.align = StageAlign.TOP_LEFT;
@@ -102,10 +92,7 @@ package
             flash.utils.setTimeout(this.system_on_js_ready, 0);
         }
         
-        /**
-         * system callack event, when js ready, register callback for js.
-         * the actual main function.
-         */
+        
         private function system_on_js_ready():void {
             if (!flash.external.ExternalInterface.available) {
                 flash.utils.setTimeout(this.system_on_js_ready, 100);
@@ -123,9 +110,7 @@ package
             flash.external.ExternalInterface.call(this.js_on_player_ready, this.js_id);
         }
         
-        /**
-        * system callack event, timer to do some regular tasks.
-        */
+
         private function system_on_timer(evt:TimerEvent):void {
 			var ms:NetStream = this.media_stream;
 			
@@ -144,9 +129,7 @@ package
 			);
         }
 		
-		/**
-		 * system callback event, when stream is empty.
-		 */
+
 		private function system_on_buffer_empty():void {
 			var time:Number = flash.utils.getTimer();
 			flash.external.ExternalInterface.call(this.js_on_player_empty, this.js_id, time);
@@ -156,14 +139,10 @@ package
 			flash.external.ExternalInterface.call(this.js_on_player_full, this.js_id, time);
 		}
         
-        /**
-         * system callack event, when got metadata from stream.
-         * or got video dimension change event(the DAR notification), to update the metadata manually.
-         */
+
         private function system_on_metadata(metadata:Object):void {
             this.media_metadata = metadata;
             
-            // for js.
             var obj:Object = __get_video_size_object();
             
             obj.server = 'srs';
@@ -185,9 +164,7 @@ package
             }
         }
         
-        /**
-         * player callack event, when user click video to enter or leave fullscreen.
-         */
+
         private function user_on_stage_fullscreen(evt:FullScreenEvent):void {
             if (!evt.fullScreen) {
                 __execute_user_set_dar();
@@ -200,9 +177,7 @@ package
             user_h = stage.stageHeight;
             this.js_call_set_dar(-1, -1, user_w, user_h)
         }
-        /**
-         * user event callback, js cannot enter the fullscreen mode, user must click to.
-         */
+
         private function user_on_click_video(evt:MouseEvent):void {
             if (!this.stage.allowsFullScreen) {
                 return;
@@ -216,33 +191,21 @@ package
             }
         }
         
-        /**
-         * function for js to call: to pause the stream. ignore if not play.
-         */
+
         private function js_call_pause():void {
             if (this.media_stream) {
                 this.media_stream.pause();
             }
         }
          
-        /**
-         * function for js to call: to resume the stream. ignore if not play.
-         */
+
         private function js_call_resume():void {
             if (this.media_stream) {
                 this.media_stream.resume();
             }
         }
         
-        /**
-        * to set the DAR, for example, DAR=16:9 where num=16,den=9.
-        * @param num, for example, 16. 
-        *       use metadata width if 0.
-        *       use user specified width if -1.
-        * @param den, for example, 9. 
-        *       use metadata height if 0.
-        *       use user specified height if -1.
-         */
+
         private function js_call_set_dar(num:int, den:int, width:int, height:int):void {
             user_dar_num = num;
             user_dar_den = den;
@@ -252,32 +215,20 @@ package
             flash.utils.setTimeout(__execute_user_set_dar, 0);
         }
         
-        /**
-         * set the fullscreen size data.
-         * @refer the refer fullscreen mode. it can be:
-         *       video: use video orignal size.
-         *       screen: use screen size to rescale video.
-         * @param percent, the rescale percent, where
-         *       100 means 100%.
-         */
+
         private function js_call_set_fs_size(refer:String, percent:int):void {
             user_fs_refer = refer;
             user_fs_percent = percent;
         }
         
-        /**
-         * set the stream buffer time in seconds.
-         * @buffer_time the buffer time in seconds.
-         */
+
         private function js_call_set_bt(buffer_time:Number):void {
             if (this.media_stream) {
                 this.media_stream.bufferTime = 0.1;
             }
         }
         
-        /**
-         * function for js to call: to stop the stream. ignore if not play.
-         */
+
         private function js_call_stop():void {
             if (this.media_video) {
                 this.removeChild(this.media_video);
@@ -293,7 +244,6 @@ package
             }
         }
         
-        // srs infos
         private var srs_server:String = null;
         private var srs_primary:String = null;
         private var srs_authors:String = null;
@@ -301,14 +251,7 @@ package
         private var srs_pid:String = null;
         private var srs_server_ip:String = null;
         
-        /**
-         * function for js to call: to play the stream. stop then play.
-         * @param url, the rtmp/http url to play.
-         * @param _width, the player width.
-         * @param _height, the player height.
-         * @param buffer_time, the buffer time in seconds. rewmmend to >=0.5
-         * @param volume, the volume, 0 is mute, 1 is 100%, 2ws 200%.
-         */
+
         private function js_call_play(url:String, _width:int, _height:int, buffer_time:Number, volume:Number):void {
             this.user_url = url;
             this.user_w = _width;
@@ -341,15 +284,7 @@ package
                     }
                  
                 }
-                /*if (evt.info.code == "NetConnection.Connect.NetworkChange") {
-                    js_call_play(url, _width, _height, 0.3, 10);
-                    this.media_conn.close();
-                    this.media_conn = null;
-                    // 干掉当前播放画面，重新播放
-                }*/
-                //if (evt.info.code != "NetConnection.Connect.Success") {
-                    //return;
-                //}
+
                 media_stream = new NetStream(media_conn);
                 media_stream.soundTransform = new SoundTransform(volume);
                 media_stream.bufferTime = 0.1;
@@ -365,7 +300,6 @@ package
 						system_on_buffer_full();
 					}
                     
-                    // TODO: FIXME: failed event.
                 });
                 
                 var streamName:String = url.substr(url.lastIndexOf("/") + 1);
@@ -382,11 +316,7 @@ package
                 __draw_black_background(_width, _height);
                 log('When you see this!,your flash player has down!');
                 log('When you see this!,your flash player has down!' + media_video.toString());
-                // lowest layer, for mask to cover it.
-                //setChildIndex(media_video, 1);
-                /*if(this.numChildren) {
-                    this.setChildIndex(media_video, (this.numChildren-1));
-                }*/
+
                 setChildIndex(media_video, 0);
                 log('Child Length' + numChildren);
             });
@@ -400,12 +330,7 @@ package
         }
     
         
-        /**
-        * get the "right" size of video,
-        * 1. initialize with the original video object size.
-        * 2. override with metadata size if specified.
-        * 3. override with codec size if specified.
-        */
+
         private function __get_video_size_object():Object {
             var obj:Object = {
                 width: media_video.width,
@@ -430,19 +355,14 @@ package
             
             return obj;
         }
-        
-        /**
-        * execute the enter fullscreen action.
-        */
+
         private function __execute_user_enter_fullscreen():void {
             if (!user_fs_refer || user_fs_percent <= 0) {
                 return;
             }
             
-            // change to video size if refer to video.
             var obj:Object = __get_video_size_object();
             
-            // get the DAR
             var den:int = user_dar_den;
             var num:int = user_dar_num;
             
@@ -467,7 +387,6 @@ package
                     height: this.stage.fullScreenHeight
                 };
             }
-            // rescale to fs
             __update_video_size(num, den, 
 				obj.width * user_fs_percent / 100, 
 				obj.height * user_fs_percent / 100, 
@@ -475,9 +394,7 @@ package
 			);
         }
         
-        /**
-         * for user set dar, or leave fullscreen to recover the dar.
-         */
+
         private function __execute_user_set_dar():void {
             // get the DAR
             var den:int = user_dar_den;
@@ -502,21 +419,11 @@ package
             __update_video_size(num, den, this.user_w, this.user_h, this.user_w, this.user_h);
         }
         
-        /**
-        * update the video width and height, 
-        * according to the specifies DAR(den:num) and max size(w:h).
-        * set the position of video(x,y) specifies by size(sw:sh),
-        * and update the bg to size(sw:sh).
-        * @param _num/_den the DAR. use to rescale the player together with paper size.
-        * @param _w/_h the video draw paper size. used to rescale the player together with DAR.
-        * @param _sw/_wh the stage size, >= paper size. used to center the player.
-        */
+
         private function __update_video_size(_num:int, _den:int, _w:int, _h:int, _sw:int, _sh:int):void {
             if (!this.media_video || _den <= 0 || _num <= 0) {
                 return;
             }
-            // set DAR.
-            // calc the height by DAR
             var _height:int = _w * _den / _num;
             if (_height <= _h) {
                 this.media_video.width = _w;
@@ -528,23 +435,17 @@ package
                 this.media_video.width = _width;
                 this.media_video.height = _h;
             }
-            // align center.
             this.media_video.x = (_sw - this.media_video.width) / 2;
             this.media_video.y = (_sh - this.media_video.height) / 2;
             
             __draw_black_background(_sw, _sh);
         }
         
-        /**
-        * draw black background and draw the fullscreen mask.
-        */
         private function __draw_black_background(_width:int, _height:int):void {
-            // draw black bg.
             this.graphics.beginFill(0x00, 1.0);
             this.graphics.drawRect(0, 0, _width, _height);
             this.graphics.endFill();
             
-            // draw the fs mask.
             this.control_fs_mask.graphics.beginFill(0xff0000, 0);
             this.control_fs_mask.graphics.drawRect(0, 0, _width, _height);
             this.control_fs_mask.graphics.endFill();
